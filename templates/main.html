@@ -1,0 +1,285 @@
+ 
+<!DOCTYPE html>
+<html>
+<head>
+	<title>样例图片及订单管理</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        function enlargeImage(imageUrl) {
+            // Create a new image element
+            var img = new Image();
+            img.src = imageUrl;
+
+            // Create a modal dialog to display the enlarged image
+            var modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            modal.style.display = 'flex';
+            modal.style.justifyContent = 'center';
+            modal.style.alignItems = 'center';
+
+            // Add the image to the modal dialog
+            modal.appendChild(img);
+
+            // Add the modal dialog to the document
+            document.body.appendChild(modal);
+
+            // Remove the modal dialog when the user clicks on it
+            modal.onclick = function() {
+                document.body.removeChild(modal);
+            };
+        }
+    </script>
+
+	<style>
+		/* Style the sidebar */
+		.sidebar {
+			height: 100%;
+			width: 200px;
+			position: fixed;
+			z-index: 1;
+			top: 0;
+			left: 0;
+			background-color: #111;
+			overflow-x: hidden;
+			padding-top: 20px;
+		}
+
+		/* Style sidebar links */
+		.sidebar a {
+			padding: 6px 8px 6px 16px;
+			text-decoration: none;
+			font-size: 20px;
+			color: #818181;
+			display: block;
+            border: 1px solid #ddd;
+		}
+
+		/* Style sidebar links on hover */
+		.sidebar a:hover {
+			color: #f1f1f1;
+		}
+
+		/* Style main content */
+		.main {
+			margin-left: 200px;
+			padding: 0px 10px;
+		}
+
+		/* Style header */
+		.header {
+			padding: 10px;
+			background-color: #007bff;
+			color: white;
+			text-align: center;
+		}
+		/* Style table */
+		table {
+			border-collapse: collapse;
+			width: 100%;
+			border: 1px solid #ddd;
+			font-size: 18px;
+		}
+
+		/* Style table header */
+		th {
+			background-color: #007bff;
+			color: white;
+			text-align: left;
+			padding: 12px;
+		}
+
+		/* Style table data */
+		td {
+			padding: 12px;
+		}
+
+		/* Style table data on hover */
+		tr:hover {
+			background-color: #f5f5f5;
+		}
+
+		/* Style form */
+		form {
+			border: 3px solid #f1f1f1;
+			padding: 20px;
+			width: 80%;
+			margin: auto;
+		}
+
+		/* Style form input fields */
+		input[type=text], select {
+			width: 100%;
+			padding: 12px 20px;
+			margin: 8px 0;
+			display: inline-block;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			box-sizing: border-box;
+		}
+
+		/* Style form submit button */
+		input[type=submit] {
+			background-color: #007bff;
+			color: white;
+			padding: 12px 20px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			float: right;
+		}
+
+		/* Style form submit button on hover */
+		input[type=submit]:hover {
+			background-color: #0069d9;
+		}
+
+		/* Style form cancel button */
+		.cancelbtn {
+			background-color: #f44336;
+			color: white;
+			padding: 12px 20px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			float: right;
+			margin-right: 10px;
+		}
+
+		/* Style form cancel button on hover */
+		.cancelbtn:hover {
+			background-color: #d32f2f;
+		}
+
+		/* Style form container */
+		.container {
+			padding: 16px;
+		}
+
+		/* Style form label */
+		label {
+			font-size: 20px;
+			font-weight: bold;
+		}
+
+		/* Style form input fields on focus */
+		input[type=text]:focus, select:focus {
+			border: 2px solid #007bff;
+		}
+
+		/* Style form error message */
+		.error {
+			color: #f44336;
+			font-size: 18px;
+			font-weight: bold;
+			margin-top: 10px;
+		}
+
+		/* Style form success message */
+		.success {
+			color: #4CAF50;
+			font-size: 18px;
+			font-weight: bold;
+			margin-top: 10px;
+		}
+	</style>
+</head>
+<body>
+	<!-- Sidebar -->
+	<div class="sidebar">
+        <h2 style="color: cornsilk; padding: 10px ">管理员页面</h2>
+		<a href="/main">管理样例图片</a>
+		<a href="/orders">管理用户订单</a>
+	</div>
+
+
+	<!-- Main content -->
+	<div class="main">
+		<!-- Header -->
+		<div class="header">
+			<h1>样例图片及订单管理</h1>
+		</div>
+
+        <section id="upload-example">
+            <button type="button" style="color: #4CAF50; padding: 10px" data-toggle="modal" data-target="#uploadModal">上传图片</button>
+            <!-- Modal -->
+            <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="uploadModalLabel">上传图片和信息</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+
+                            <form action="/upload" method="post" enctype="multipart/form-data" autocomplete="off" onsubmit="return dosubmit()">
+                                <div class="container">
+                                    <label for="example-name"><b>名称</b></label>
+                                    <input type="text" placeholder="输入名称" name="example-name" required>
+
+                                    <label for="example-category"><b>类别</b></label>
+                                    <select name="example-category" required>
+                                        <option value="">选择分类</option>
+                                        <option value="single">单人</option>
+                                        <option value="double">双人</option>
+                                        <option value="multi">多人</option>
+                                        <option value="other">其他</option>
+                                    </select>
+
+                                    <label for="example-image"><b>图片</b></label>
+                                    <input type="file" name="example-image" required>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary cancelbtn" data-dismiss="modal">取消</button>
+                                    <input type="submit" class="btn btn-primary" value="上传">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+		<!-- Manage examples section -->
+		<section id="manage-examples">
+			<!-- Display example images and information -->
+			<table>
+				<thead>
+					<tr>
+						<th>图片</th>
+						<th>名称</th>
+						<th>类别</th>
+						<th>操作</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for image in images %}
+                    <tr>
+                        <td>
+                            <img src="{{ image.src }}" alt="{{ image.name }}" width="200" height="100" onclick="enlargeImage('{{ image.src }}')">
+                        </td>
+                        <td>{{ image.name }}</td>
+                        <td>{{ image.category }}</td>
+                        <td>
+                            <a href="/delete/image/{{ image.id }}" style="color: red">删除</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </div>
+</button>
+</body>
+</html>

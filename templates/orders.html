@@ -1,0 +1,407 @@
+ 
+<!DOCTYPE html>
+<html>
+<head>
+	<title>样例图片及订单管理</title>
+
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+    function openDialog(orderId) {
+      // Retrieve the order data for the specified order ID from the backend
+      $.ajax({
+        url: '/getorder/' + orderId,
+        type: 'GET',
+        success: function(data) {
+          // Populate the dialog fields with the order data
+            $('#order-id').val(data.id)
+          $('#order-name').val(data.name);
+
+          $('#order-quantity').val(data.quantity);
+          $('#order-time').val(data.order_time);
+            $('#order-status').val(data.status);
+            $('#order-category').val(data.category);
+            $('#order-payment-status').val(data.payment_status);
+
+          $('#order-payment-amount').val(data.payment_amount);
+            $.ajax({
+            url: '/orderdetail/' + orderId,
+            type: 'POST',
+            success: function(detaildata) {
+
+              // Populate the dialog fields with the order data
+                var imageContainer = $('#image-container');
+                for(var i = 0; i<detaildata.length; i++){
+                    console.log(detaildata)
+                    var imageName = detaildata[i].text;
+                    var imagePath = 'https://www.muke0514.online:5001/detail/' + detaildata[i].image_path;
+                    console.log(imagePath)
+                    var input = $('<input>').attr('type', 'text').attr('readonly', true).attr('value', imageName).attr('style', 'border:none');
+                    var img = $('<img>').attr('src', imagePath).click(function(){
+                        // Create a new image element
+                        var img = new Image();
+                        img.src = imagePath;
+
+                        // Create a modal dialog to display the enlarged image
+                        var modal = document.createElement('div');
+                        modal.style.position = 'fixed';
+                        modal.style.top = '0';
+                        modal.style.left = '0';
+                        modal.style.width = '100%';
+                        modal.style.height = '100%';
+                        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                        modal.style.display = 'flex';
+                        modal.style.justifyContent = 'center';
+                        modal.style.alignItems = 'center';
+
+                        // Add the image to the modal dialog
+                        modal.appendChild(img);
+
+                        // Add the modal dialog to the document
+                        document.body.appendChild(modal);
+
+                        // Remove the modal dialog when the user clicks on it
+                        modal.onclick = function() {
+                            document.body.removeChild(modal);
+                        };
+                    });
+                    imageContainer.append(input);
+                    imageContainer.append(img);
+                }
+
+
+            },
+            error: function() {
+              alert('Failed to retrieve order data.');
+            }
+            });
+          // Show the dialog
+          $('#dialog').show();
+        },
+        error: function() {
+          alert('Failed to retrieve order data.');
+        }
+      });
+        // Show the dialog
+        // ...
+      }
+      function closeDialog() {
+          // Hide the dialog
+          $('#dialog').hide();
+        }
+        function saveOrder() {
+      // Retrieve the updated order data from the dialog fields
+        var orderId = $('#order-id').val()
+      var orderName = $('#order-name').val();
+      var orderStatus = $('#order-status').val();
+      var orderQuantity = $('#order-quantity').val();
+      var orderTime = $('#order-time').val();
+      var orderCategory = $('#order-category').val();
+      var orderPaymentStatus = $('#order-payment-status').val();
+      var orderPaymentAmount = $('#order-payment-amount').val();
+
+      // Send the updated order data to the backend
+      $.ajax({
+        url: '/updateorder/' + orderId,
+        type: 'POST',
+        data: {
+          name: orderName,
+          status: orderStatus,
+          quantity: orderQuantity,
+          order_time: orderTime,
+          category: orderCategory,
+          payment_status: orderPaymentStatus,
+          payment_amount: orderPaymentAmount
+        },
+        success: function() {
+          // Hide the dialog
+          $('#dialog').hide();
+          window.location.reload()
+        },
+        error: function() {
+          alert('Failed to update order data.');
+        },
+      });
+    }
+    </script>
+	<style>
+		/* Style the sidebar */
+		.sidebar {
+			height: 100%;
+			width: 200px;
+			position: fixed;
+			z-index: 1;
+			top: 0;
+			left: 0;
+			background-color: #111;
+			overflow-x: hidden;
+			padding-top: 20px;
+		}
+
+		/* Style sidebar links */
+		.sidebar a {
+			padding: 6px 8px 6px 16px;
+			text-decoration: none;
+			font-size: 20px;
+			color: #818181;
+			display: block;
+            border: 1px solid #ddd;
+		}
+
+		/* Style sidebar links on hover */
+		.sidebar a:hover {
+			color: #f1f1f1;
+		}
+        #image-container {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: space-between;
+        }
+
+        #image-container > * {
+          width: calc(25% - 10px);
+          margin-bottom: 20px;
+          border: 1px solid #ddd;
+          box-sizing: border-box;
+        }
+		/* Style main content */
+		.main {
+			margin-left: 200px;
+			padding: 0px 10px;
+		}
+
+		/* Style header */
+		.header {
+			padding: 10px;
+			background-color: #007bff;
+			color: white;
+			text-align: center;
+		}
+
+		/* Style table */
+		table {
+			border-collapse: collapse;
+			width: 100%;
+			border: 1px solid #ddd;
+			font-size: 18px;
+		}
+
+		/* Style table header */
+		th {
+			background-color: #007bff;
+			color: white;
+			text-align: left;
+			padding: 12px;
+		}
+
+		/* Style table data */
+		td {
+			padding: 12px;
+		}
+
+		/* Style table data on hover */
+		tr:hover {
+			background-color: #f5f5f5;
+		}
+
+		/* Style form */
+		form {
+			border: 3px solid #f1f1f1;
+			padding: 20px;
+			width: 80%;
+			margin: auto;
+		}
+
+		/* Style form input fields */
+		input[type=text], select {
+			width: 100%;
+			padding: 12px 20px;
+			margin: 8px 0;
+			display: inline-block;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			box-sizing: border-box;
+		}
+
+		/* Style form submit button */
+		input[type=submit] {
+			background-color: #007bff;
+			color: white;
+			padding: 12px 20px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			float: right;
+		}
+
+		/* Style form submit button on hover */
+		input[type=submit]:hover {
+			background-color: #0069d9;
+		}
+
+		/* Style form cancel button */
+		.cancelbtn {
+			background-color: #f44336;
+			color: white;
+			padding: 12px 20px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			float: right;
+			margin-right: 10px;
+		}
+
+		/* Style form cancel button on hover */
+		.cancelbtn:hover {
+			background-color: #d32f2f;
+		}
+
+		/* Style form container */
+		.container {
+			padding: 16px;
+		}
+
+		/* Style form label */
+		label {
+			font-size: 20px;
+			font-weight: bold;
+		}
+
+		/* Style form input fields on focus */
+		input[type=text]:focus, select:focus {
+			border: 2px solid #007bff;
+		}
+
+		/* Style form error message */
+		.error {
+			color: #f44336;
+			font-size: 18px;
+			font-weight: bold;
+			margin-top: 10px;
+		}
+
+		/* Style form success message */
+		.success {
+			color: #4CAF50;
+			font-size: 18px;
+			font-weight: bold;
+			margin-top: 10px;
+		}
+	</style>
+</head>
+<body>
+	<!-- Sidebar -->
+	<div class="sidebar">
+        <h2 style="color: cornsilk; padding: 10px ">管理员页面</h2>
+		<a href="/main">管理样例图片</a>
+		<a href="/orders">管理用户订单</a>
+	</div>
+
+	<!-- Main content -->
+	<div class="main">
+		<!-- Header -->
+		<div class="header">
+			<h1>样例图片及订单管理</h1>
+		</div>
+        <div id="dialog" style="display: none;">
+          <form>
+            <div class="container">
+              <h1>订单修改</h1>
+              <hr>
+                <label for="order-id"><b>订单ID</b></label>
+                <input type="text" placeholder="请输入订单ID" name="order-id" id="order-id" readonly>
+
+              <label for="order-name"><b>订单名称</b></label>
+              <input type="text" placeholder="请输入订单名称" name="order-name" id="order-name" required>
+
+              <label for="order-status"><b>订单状态</b></label>
+              <select name="order-status" id="order-status" required>
+                <option value="已接单">已接单</option>
+                <option value="待支付">待支付</option>
+                <option value="已完成">已完成</option>
+                <option value="已取消">已取消</option>
+                </select>
+
+              <label for="order-quantity"><b>人数情况</b></label>
+              <input type="text" placeholder="请输入订单人数情况" name="order-quantity" id="order-quantity" required>
+
+              <label for="order-time"><b>下单时间</b></label>
+              <input type="text" placeholder="请输入下单时间" name="order-time" id="order-time" required>
+
+              <label for="order-category"><b>订单类型</b></label>
+              <select name="order-category" id="order-category" required>
+                <option value="正常(定制)">正常(定制)</option>
+                <option value="正常(盲盒)">正常(盲盒)</option>
+                <option value="其他">其他</option>
+                </select>
+
+              <label for="order-payment-status"><b>支付情况</b></label>
+              <select name="order-payment-status" id="order-payment-status" required>
+                <option value="未支付">未支付</option>
+                <option value="已支付">已支付</option>
+                </select>
+
+              <label for="order-payment-amount"><b>应付金额</b></label>
+              <input type="text" placeholder="请输入应付金额" name="order-payment-amount" id="order-payment-amount" required>
+
+
+              <label for="order-detail-image"><b>细节图片</b></label>
+              <div id="image-container"></div>
+
+
+
+              <div class="clearfix">
+                <button type="button" class="cancelbtn" onclick="closeDialog()">取消</button>
+                <button type="submit" class="btn btn-primary" onclick="saveOrder()">保存</button>
+              </div>
+            </div>
+          </form>
+        </div>
+	<!-- Manage orders section -->
+        <section id="manage-orders">
+            <!-- Display user orders and information -->
+            <table>
+                <thead>
+                <tr>
+                  <th>订单号</th>
+                  <th>订单名称</th>
+                  <th>订单状态</th>
+                  <th>人数信息</th>
+                  <th>下单时间</th>
+                  <th>下单类别</th>
+                  <th>支付状态</th>
+                  <th>应付金额</th>
+                    <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for order in orders %}
+                <tr>
+                  <td>{{ order.id }}</td>
+                  <td>{{ order.name }}</td>
+                  <td>{{ order.status }}</td>
+                  <td>{{ order.quantity }}</td>
+                  <td>{{ order.order_time }}</td>
+                  <td>{{ order.category }}</td>
+                  <td>{{ order.payment_status }}</td>
+                  <td>{{ order.payment_amount }}</td>
+                <td>
+                    <button onclick="openDialog('{{ order.id }}')">修改</button>
+                    <a href="/delete/order/{{ order.id }}" style="color: red">删除</a>
+                </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+        </section>
+    </div>
+</button>
+</body>
+</html>
