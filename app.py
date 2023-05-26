@@ -1,27 +1,30 @@
-from flask import Flask, request, render_template, redirect, url_for, send_from_directory, jsonify, after_this_request
+from flask import Flask, request, render_template, redirect, url_for, send_from_directory, send_file, jsonify, after_this_request
 import uuid
+from PIL import Image
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-import os
+import os, io
 from datetime import datetime
 app = Flask(__name__)
 CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:KELE0514@localhost:3306/miniprogram'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:123456@localhost:3306/miniprogram'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+
 user_image_collection = db.Table('user_image_collection',
                                  db.Column('user_id', db.String(16), db.ForeignKey('user.id'), primary_key=True),
-                                 db.Column('image_id', db.Integer, db.ForeignKey('image.id'), primary_key=True),
+                                 db.Column('image_id', db.Integer, db.ForeignKey('images.id'), primary_key=True),
                                  )
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.String(16), primary_key=True)
     name = db.Column(db.String(50))
     openid = db.Column(db.String(128))
-    collections = db.relationship('Image', secondary=user_image_collection, backref='users')
+    collections = db.relationship('Images', secondary=user_image_collection, backref='users')
     orders = db.relationship('Order', backref='user')
-class Image(db.Model):
-    __tablename__ = 'image'
+class Images(db.Model):
+    __tablename__ = 'images'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(50))
     category = db.Column(db.String(16))
@@ -48,6 +51,10 @@ class Order(db.Model):
     details = db.relationship('OrderDetail', backref='order') #修改details字段为关联OrderDetail类
     user_id = db.Column(db.String(16), db.ForeignKey('user.id'))
 
+# with app.app_context():
+#     db.drop_all()
+#     db.create_all()
+
 @app.route('/')
 def admin():
     return render_template('login.html')
@@ -63,11 +70,12 @@ def check():
 
 @app.route('/main')
 def main():
-    images = Image.query.all()
+    images = Images.query.all()
     return render_template('main.html',images=images)
 
 @app.route('/upload', methods=['POST'])
 def upload():
+    localhost = "http://127.0.0.1:5001/"
     if request.method == 'POST':
         # Get the uploaded file
         file = request.files['example-image']
@@ -81,28 +89,42 @@ def upload():
         # Create a new instance of the Image model
         name = request.form['example-name']
         category = request.form['example-category']
-        image = Image(name=name, category=category, src='https://www.muke0514.online:5001/images/'+filename, thumb='https://www.muke0514.online:5001/images/'+filename)
+        image = Images(name=name, category=category, src=localhost + 'images/'+filename, thumb=localhost + 'images/'+filename)
         # Add the instance to the database session and commit the changes
         db.session.add(image)
         db.session.commit()
-        images =Image.query.all()
+        images =Images.query.all()
         return render_template('main.html', images=images)
 
 @app.route('/images/<filename>')
 def get_image(filename):
-    folder_path = os.path.join(os.getcwd()+'/images')
-    return send_from_directory(folder_path, filename)
+    folder_path = os.path.join(os.getcwd()+'/images/' + filename)
+    img = Image.open(folder_path).convert('RGB')
+    file_size = os.path.getsize(folder_path)/1024
+    max_size = 8192
+    if file_size <max_size:
+        return send_file(folder_path)
+
+    if file_size > max_size:
+        img.thumbnail((img.size[0] * max_size / file_size, img.size[1] * max_size/file_size))
+        img_io = io.BytesIO()
+        img.save(img_io, format="PNG")
+        img_io.seek(0)
+        return send_file(img_io, mimetype="image/png")
+    else:
+        return send_file(folder_path)
 
 @app.route('/delete/image/<imageid>')
 def delete_image(imageid):
-    image = Image.query.filter_by(id=imageid).first()
+    localhost = "http://127.0.0.1:5001"
+    image = Images.query.filter_by(id=imageid).first()
     if image:
         # Delete the image file from the server
-        os.remove(os.getcwd() + image.src.split('https://www.muke0514.online:5001')[1])
+        os.remove(os.getcwd() + image.src.split(localhost)[1])
         # Delete the instance from the database session and commit the changes
         db.session.delete(image)
         db.session.commit()
-    images = Image.query.all()
+    images = Images.query.all()
     return render_template('main.html', images=images)
 
 @app.route('/delete/order/<orderid>')
@@ -160,4 +182,5 @@ def get_detail_image(image_path):
     return send_from_directory(folder_path, path[1])
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True, ssl_context=("9976544_www.muke0514.online.pem","9976544_www.muke0514.online.key"))
+    #app.run(host='0.0.0.0', port=5001, debug=True, ssl_context=("9976544_www.muke0514.online.pem","9976544_www.muke0514.online.key"))
+    app.run(host='0.0.0.0', port=5001, debug=True)
